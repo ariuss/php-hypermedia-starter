@@ -1,0 +1,39 @@
+services:
+  php:
+    image: php:8.4-fpm
+    volumes:
+      - .:/var/www/html
+      - ./php-fpm.ini:/usr/local/etc/php/conf.d/docker-custom.ini
+      - ./storage/logs/php-error.log:/var/log/php-fpm.log
+      - ./storage/tmp:/tmp
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(extension_loaded('pdo') && extension_loaded('pdo_sqlite') ? 0 : 1);"]
+      interval: 5s
+      retries: 5
+      start_period: 5s
+      timeout: 2s
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - .:/var/www/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./storage/logs/nginx-access.log:/var/log/nginx/access.log
+      - ./storage/logs/nginx-error.log:/var/log/nginx/error.log
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      php:
+        condition: service_healthy
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: ""
