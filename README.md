@@ -27,7 +27,7 @@ Setup sqlite database:
 
 ```bash
 touch storage/database/app.db
-sqlite3 storage/database/app.db ".read setup.sql"
+./migrations.sh up
 ```
 
 Download Bootstrap and HTMX:
